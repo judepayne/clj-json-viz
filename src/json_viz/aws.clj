@@ -40,6 +40,7 @@
     (-> svg
         (str/replace "\n" "")
         (str/replace "\"" "'")
+        (str/replace "Monospace" "sans-serif")
         str/split-lines
         first)))
 
