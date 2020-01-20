@@ -144,11 +144,17 @@
   "Returns dot representation of the json."
   [js
    & {:keys [color1
-             color2]
+             color2
+             highlight-nodes
+             highlight-options]
       :or {color1 "snow"
-           color2 "lightsteelblue1"}}]
+           color2 "lightsteelblue1"
+           highlight-nodes []
+           highlight-options {:fillcolor #"f2c9c9"}}}]
   (if (and (empty? (cc/node js)) (> (count js) 1))
+
     (js->dot {"{ }" js}) ;; catch when first node only has structural elements.
+
     (tree->dot
      (fn [n] (not (empty? (cc/structural n))))
      children
