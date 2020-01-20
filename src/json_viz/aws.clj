@@ -19,7 +19,7 @@
 
 
 (def path-to-dot "/opt/bin/dot_static")
-;(def path-to-dot "/usr/local/bin/dot")
+(def path-to-dot "/usr/local/bin/dot")
 
 
 (defn dot->svg
@@ -45,11 +45,21 @@
         first)))
 
 
+(defn js->dot-wrapper
+  [js]
+  (if (and (:json js) (:options js))
+    ;; We have json & options. rearrange to call into js->dot
+    (viz/js->dot (:json js) (:options js))
+
+    ;; We just have json. pass in directly
+    (viz/js->dot js {})))
+
+
 (defn js->svg
   [js & {:keys [path] :or {path path-to-dot}}]
   (try
     (let [in (json/read-str js :key-fn keyword)
-          dot (viz/js->dot in :path path)
+          dot (js->dot-wrapper in)
           svg (xml->clean-svg (dot->svg dot))]
       (json/write-str {:body svg}
                       :escape-slash false))

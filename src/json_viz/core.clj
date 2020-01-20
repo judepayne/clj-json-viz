@@ -2,7 +2,8 @@
   (:require [clojure.data.json     :as json]
             [rhizome.dot           :as rhi]
             [contract-checker.core :as cc]
-            [clojure.string        :as str]))
+            [clojure.string        :as str])
+  (:refer-clojure :exclude [contains?]))
 
 
 ;; For visualization of a json-schema
@@ -139,29 +140,60 @@
       :cluster->descriptor cluster->descriptor)))
 
 
+(defn contains?
+  [coll item]
+ (cond
+   (map? coll)  (clojure.core/contains? coll item)
+   (sequential? coll) (some? (some #{item} coll))
+   :default      false))
+
+
+(defn highlight-node?
+  [node highlight-nodes]
+  (or (contains? highlight-nodes node)
+      (contains? highlight-nodes (cc/node node))))
+
+
+(defn html-like
+  "Returns graphviz html label"
+  [label fillcolor]
+  (str
+   "<<TABLE BORDER='0' CELLBORDER='0' CELLSPACING='0'><TR><TD><BGCOLOR='"
+   fillcolor
+   "'>"
+   label
+   "</BGCOLOR></TD></TR></TABLE>>"))
+
 
 (defn js->dot
   "Returns dot representation of the json."
-  [js
-   & {:keys [color1
-             color2
-             highlight-nodes
-             highlight-options]
-      :or {color1 "snow"
-           color2 "lightsteelblue1"
-           highlight-nodes []
-           highlight-options {:fillcolor #"f2c9c9"}}}]
-  (if (and (empty? (cc/node js)) (> (count js) 1))
+  [js options]
+  (let [opts (merge {:node1-options {:fillcolor "#dbdad6"}
+                     :node2-options {:fillcolor "#c6e1f3"}
+                     :highlight-nodes []
+                     :highlight-options {:fillcolor "#f2c9c9"}}
+                    options)
+        highlight-map (zipmap (:highlight-nodes opts) (range 1 100))]
+    
+    (if (and (empty? (cc/node js)) (> (count js) 1))
 
-    (js->dot {"{ }" js}) ;; catch when first node only has structural elements.
+      (js->dot {"{ }" js} opts) ;; catch when first node only has structural elements.
 
-    (tree->dot
-     (fn [n] (not (empty? (cc/structural n))))
-     children
-     js
-     :node->descriptor (fn [n] (if (empty? (cc/node n))
-                                 (merge graphviz-node-options {:label (seq->string (keys n))
-                                                               :fillcolor "#dbdad6"})
-                                 (merge graphviz-node-options {:label (map->string (cc/node n))
-                                                               :fillcolor "#c6e1f3"})))
-     :options {:dpi 72})))
+      (tree->dot
+       (fn [n] (not (empty? (cc/structural n))))
+       children
+       js
+       :node->descriptor (fn [n] (if (empty? (cc/node n))
+                                   ;; This is a structural node - type 'node1'
+                                   (merge graphviz-node-options
+                                          {:label (seq->string (keys n))}
+                                          (:node1-options opts))
+                                   ;; type 'node2'
+                                   (merge graphviz-node-options
+                                          {:label (map->string (cc/node n))}
+                                          (if (highlight-node? n (:highlight-nodes opts))
+                                            (merge (:node2-options opts)
+                                                   (:highlight-options opts)
+                                                   {:xlabel (get highlight-map (cc/node n))})
+                                            (:node2-options opts)))))
+       :options {:dpi 72}))))
