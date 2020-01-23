@@ -19,7 +19,7 @@
 
 
 (def path-to-dot "/opt/bin/dot_static")
-(def path-to-dot "/usr/local/bin/dot")
+;(def path-to-dot "/usr/local/bin/dot")
 
 
 (defn dot->svg
