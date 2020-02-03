@@ -15,6 +15,61 @@
    :default      false))
 
 
+;; html-like labels for graphviz -------------------------------------
+;; We can produce uml class like diagrams using Graphviz' html like labels feature
+;; https://www.graphviz.org/doc/info/shapes.html#html
+(defn- td-attr
+  [td-attrs]
+  (when td-attrs
+    (apply str
+           (interleave (repeat " ")
+                       (for [[k' v'] (partition 2 td-attrs)]
+                         (str k' "=\"" v' "\""))))))
+
+
+(defn- rows
+  "Produces a string for an html table rows from items. Each item should be
+  a [k v] vector tuple."
+  [items highlight-items highlight-bgcolor
+   & {:keys [td-attrs] :or {td-attrs nil}}]
+  (apply str
+         (for [[k v] items]
+           (str
+            (if (contains? highlight-items [k v])
+              (str "<TR><TD BGCOLOR=\"" highlight-bgcolor "\"" (td-attr td-attrs))
+              (str "<TR><TD" (td-attr td-attrs)))
+            ">" k ": " v "</TD></TR>"))))
+
+
+(defn- header-row
+  [item]
+  (rows [item] [] nil :td-attrs ["ALIGN" "CENTER"]))
+
+
+(defn table
+  "Produces a graphviz html-like node label, given:
+  - the header-item, a 2-tuple of the key and value making up the header row.
+  - row-items, a sequence of 2-tuples each of the key and value making up (each) row.
+  - (optional) highlight-rows, a sequence of 2-tuples representing any rows to be highlighted by..
+  - (optional) highlight-rows-bgcolor, a hex color value used as background color highlighting.
+  - (optional) td-attrs, an even-numbered sequence of (html/ graphviz) attributes and their
+    values to be added into the TD tag of every one of the row-items."
+  [header-item row-items
+   & {:keys [highlight-rows
+             highlight-rows-bgcolor
+             td-attrs]
+      :or {highlight-rows []
+           highlight-rows-bgcolor "#e0a19b"
+           td-attrs nil}}]
+  (str
+   "<TABLE>"
+   (header-row header-item)
+   (rows row-items highlight-rows highlight-rows-bgcolor :td-attrs td-attrs)
+   "</TABLE>"))
+
+
+;; end html-like labels section --------------------------------------
+
 (defn with-path
   "Decorates (in metadata) each level of a nested structure with :path."
   [item path]
@@ -74,6 +129,20 @@
   (contains? highlight-paths path))
 
 
+(defn seq->str
+  [s]
+  (apply str (interpose ", " s)))
+
+
+(defn make-highlight-map
+  [paths]
+  (let [m (group-by val (zipmap (range 1 1000) paths))]
+    (reduce (fn [acc [k v]]
+              (assoc acc k (seq->str (map first v))))
+            {}
+            m)))
+
+
 (defn js->dot
   "Returns dot representation of the json."
   [js options]
@@ -82,7 +151,7 @@
                      :highlight-nodes []
                      :highlight-options {:fillcolor "#f2c9c9"}}
                     options)
-        highlight-map (zipmap (:highlight-paths opts) (range 1 1000))
+        highlight-map (make-highlight-map (:highlight-paths opts))
         js1 (with-path js [])
         highlight-attr (fn [path paths]
                          (when (highlight-node? path paths)

@@ -39,7 +39,7 @@
         svg (subs xml svg-start)]
     (-> svg
         (str/replace "\n" "")
-        (str/replace "\"" "'")
+        ;(str/replace "\"" "'")
         (str/replace "Monospace" "sans-serif")
         str/split-lines
         first)))
@@ -67,9 +67,10 @@
       (println (str "Error!: " (.getMessage e)))
       (json/write-str {:error (str "Lambda function error: " (.getMessage e))}))))
 
+
 ;; test function
 (comment
-(spit "out.svg" (:body (json/read-str (js->svg (slurp "example.json")) :key-fn keyword)))
+(spit "output.json" (:body (json/read-str (js->svg (slurp "example.json")) :key-fn keyword)))
 )
 
 
