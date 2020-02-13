@@ -3,7 +3,8 @@
             [clojure.string     :as str]
             [clojure.java.shell :as sh]
             [clojure.java.io    :as io]
-            [json-viz.core      :as viz]))
+            [json-viz.tree      :as tree]
+            [json-viz.uml       :as uml]))
 
 
 (defn- format-error [s err]
@@ -39,7 +40,6 @@
         svg (subs xml svg-start)]
     (-> svg
         (str/replace "\n" "")
-        ;(str/replace "\"" "'")
         (str/replace "Monospace" "sans-serif")
         str/split-lines
         first)))
@@ -49,10 +49,12 @@
   [js]
   (if (and (:json js) (:options js))
     ;; We have json & options. rearrange to call into js->dot
-    (viz/js->dot (:json js) (:options js))
+    (if (= "tree" (:style (:options js)))
+      (tree/js->dot (:json js) (dissoc (:options js) :style))
+      (uml/js->dot (:json js) (dissoc (:options js) :style)))
 
     ;; We just have json. pass in directly
-    (viz/js->dot js {})))
+    (uml/js->dot js {})))
 
 
 (defn js->svg
@@ -70,7 +72,7 @@
 
 ;; test function
 (comment
-(spit "output.json" (:body (json/read-str (js->svg (slurp "example.json")) :key-fn keyword)))
+(spit "output.svg" (:body (json/read-str (js->svg (slurp "example1.json")) :key-fn keyword)))
 )
 
 

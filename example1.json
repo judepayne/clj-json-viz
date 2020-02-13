@@ -1,0 +1,87 @@
+{ 
+   "json":{ 
+      "$id":"https:\/\/example.com\/person.schema.json",
+      "$schema":"http:\/\/json-schema.org\/draft-07\/schema#",
+      "title":"Person",
+      "type":"object",
+      "properties":{ 
+         "firstName":{ 
+            "type":"string",
+            "maxLength":10,
+            "description":"The person's first name."
+         },
+         "lastName":{ 
+            "type":"string",
+            "description":"The person's last name."
+         },
+         "age":{ 
+            "description":"Age in years which must be equal to or greater than zero.",
+            "type":"integer",
+            "minimum":0,
+            "maximum":200
+         },
+         "salary":{ 
+            "description":"Salary of a person.",
+            "type":"number1",
+            "multipleOf":2.0
+         },
+         "role2":{ 
+            "type":"array",
+            "title":"role2",
+            "minItems":2,
+            "maxItems":10,
+            "items":{ 
+               "type":"object",
+               "description":"class B",
+               "properties":{ 
+                  "b1":{ 
+                     "type":[ 
+                        "string"
+                     ],
+                     "allOf":["Jude", "Gunjan"],
+                     "title":"b1"
+                  }
+               }
+            }
+         },
+         "gender":{ 
+            "type":"array",
+            "items":{ 
+               "type":"string",
+               "enum":[ 
+                  "male",
+                  "female",
+                  "others",
+                  "x"
+               ]
+            }
+         }
+      }
+   },
+   "options":{ 
+      "style":"uml",
+      "node2-options":{ 
+         "fillcolor":"#F5F0E4"
+      },
+      "highlight-paths":[ 
+         [ 
+            "properties",
+            "salary"
+         ],
+         [ 
+            "properties",
+            "salary"
+         ],
+         [ 
+            "properties",
+            "role2"
+         ],
+         [ 
+            "properties",
+            "salary",
+            "type"
+         ]
+      ]
+   }
+}
+
