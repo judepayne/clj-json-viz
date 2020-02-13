@@ -23,7 +23,7 @@
   "Returns html code for the number n circled."
   [n]
   (let [base 9311]
-    (str "&#" (+ base n) ";")))
+    (str "&nbsp;&#" (+ base n) ";")))
 
 
 (defn nums->circled
