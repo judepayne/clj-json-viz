@@ -334,7 +334,7 @@
   (let [opts           (merge {:node1-options {:fillcolor "#dbdad6"}
                                :node2-options {:fillcolor "#c6e1f3"}
                                :highlight-paths []
-                               :highlight-options {:fillcolor "#f2c9c9"}}
+                               :highlight-options {:fillcolor "#f5e2b8"}}
                               options)
         highlight-map  (util/make-highlight-map (:highlight-paths opts) identity)
         js1            (util/with-path js [])
@@ -363,7 +363,7 @@
                             :table-attrs (merge table-attrs
                                                 {"BGCOLOR" (-> opts :node2-options :fillcolor)})
                             :highlight-items highlight-map
-                            :highlight-items-bgcolor {"BGCOLOR"
+                            :highlight-items-attr {"BGCOLOR"
                                                       (-> opts :highlight-options :fillcolor)})})))
 
      :edge->descriptor (fn [_ _] {:dir "back"})
