@@ -57,12 +57,9 @@
                                :highlight-options {:fillcolor "#f2c9c9"}
                                :style "tree"}
                               options)
-        highlight-map  (util/make-highlight-map (:highlight-paths opts) util/seq->str)
-        js1            (util/with-path js [])
-        highlight-attr (fn [path paths]
-                         (when (highlight-node? path paths)
-                           (merge (:highlight-options opts)
-                                  {:xlabel (get highlight-map path)})))]
+        highlight-map  (util/make-highlight-map (:highlight-paths opts))
+        js1            (util/with-path js [])]
+
     
     (if (and (empty? (cc/node js)) (> (count js1) 1))
 
@@ -79,12 +76,15 @@
            ;; This is a structural node - type 'node1'
            (merge graphviz-node-options
                   {:label (fmt/seq->string (keys (dissoc n :path)))}
-                  (:node1-options opts)
-                  (highlight-attr (:path n) (:highlight-paths opts)))
+                  (:node1-options opts))
            ;; type 'node2'
            (merge graphviz-node-options
                   {:label (fmt/map->string (cc/node n))}
-                  (:node2-options opts)
-                  (highlight-attr (:path n) (:highlight-paths opts)))))
+                  (:node2-options opts))))
+
+       :edge->descriptor
+       (fn [_ n]
+         {:headlabel (let [nums (get highlight-map (:path n))]
+                       (when nums (str "<" (util/nums->circled nums 10) ">")))})
 
        :options {:dpi 72}))))

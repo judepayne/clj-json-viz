@@ -19,17 +19,6 @@
 
 ;; html-like labels for graphviz -----------------
 
-(defn circled-number
-  "Returns html code for the number n circled."
-  [n]
-  (let [base 9311]
-    (str "&nbsp;&#" (+ base n) ";")))
-
-
-(defn nums->circled
-  [nums]
-  (apply str (map circled-number nums)))
-
 
 (defn- attr
   [attrs]
@@ -50,12 +39,12 @@
 (defn- row
   [item td-attrs
    & {:keys [conv-key?] :or {conv-key? true}}]
-  (let [{[k v] :item nums :nums hl-row-attrs :hl-row-attrs} item
+  (let [{[k v] :item nums :highlights hl-row-attrs :hl-row-attrs} item
         at (attr (merge td-attrs hl-row-attrs))]
     (when (not (and (nil? k) (nil? v)))
       (str "<TR>"
            "<TD " at ">" (if conv-key? (k->disp k) k) ":  " v "</TD>"
-           "<TD " at ">" (when nums (nums->circled nums)) "</TD>"
+           "<TD VALIGN=\"BOTTOM\"" at ">" (when nums (util/nums->circled nums)) "</TD>"
            "</TR>"))))
 
 
@@ -103,10 +92,10 @@
 
 (defn decorate-item
   [item item-path highlight-items highlight-row-attrs highlight-num-attrs]
-  (let [nums (get highlight-items item-path)]
-    (if nums
+  (let [highlights (get highlight-items item-path)]
+    (if highlights
       {:item item
-       :nums nums
+       :highlights highlights
        :hl-row-attrs highlight-row-attrs}
       {:item item})))
 
@@ -336,12 +325,8 @@
                                :highlight-paths []
                                :highlight-options {:fillcolor "#f5e2b8"}}
                               options)
-        highlight-map  (util/make-highlight-map (:highlight-paths opts) identity)
-        js1            (util/with-path js [])
-        highlight-attr (fn [path paths]
-                         (when (highlight-node? path paths)
-                           (merge (:highlight-options opts)
-                                  {:xlabel (get highlight-map path)})))]
+        highlight-map  (util/make-highlight-map (:highlight-paths opts))
+        js1            (util/with-path js [])]
 
     (rhi/tree->dot
      branch?

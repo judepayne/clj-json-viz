@@ -36,9 +36,34 @@
 
 
 (defn make-highlight-map
-  [paths f]
-  (let [m (group-by val (zipmap (range 1 1000) paths))]
-    (reduce (fn [acc [k v]]
-              (assoc acc k (f (map first v))))
-            {}
-            m)))
+  [errors]
+  (let [m  (group-by #(:path (val %)) (zipmap (range 1 1000) errors))
+        m' (into {} (map (fn [[k v]] [k (into {} v)]) m))]
+    m'))
+
+
+(defn circled-number
+  "Returns html code for the number n circled."
+  ([n] (circled-number n "#FFF"))
+  ([n color]
+   (let [base 9311]
+     (str "<FONT POINT-SIZE=\"12\" COLOR=\"" color  "\"><B>"
+          "&#" (+ base n) ";</B></FONT>"))))
+
+
+(defn nums->circled
+  ([nums] (nums->circled nums 0))
+  ([nums whitespace]
+   (let [maj-col "#FF0000"
+         min-col "#FF7200"
+         m (reduce
+            (fn [acc [k v]]
+              (conj acc [k (if (= "Major" (:severity v)) maj-col min-col)]))
+            []
+            nums)]
+     (str "<B>" (apply str (repeat whitespace "&nbsp;")) "</B>")
+     (apply str
+            (interpose "&nbsp;"
+                       (map
+                        #(circled-number (first %) (second %))
+                        m))))))
