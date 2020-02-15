@@ -59,7 +59,7 @@
       }
    },
    "options":{ 
-      "style":"uml",
+      "style":"tree",
       "node2-options":{ 
          "fillcolor":"#F5F0E4"
       },

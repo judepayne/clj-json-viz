@@ -3,7 +3,7 @@
             [json-viz.rhizome     :as rhi]
             [clojure.string       :as str]
             [json-viz.util        :as util]
-            [json-viz.tables      :as table]))
+            [json-viz.tables      :as tables]))
 
 ;; -------------- Navigation --------------
 ;; A. NODES
@@ -201,11 +201,11 @@
              cn []]
          (merge graphviz-node-options
                 {:label
-                 (table/uml-class
+                 (tables/table
                   hdr
                   ps
                   cn
-                  (path n)
+                  :path (path n)
                   :td-attrs {"ALIGN" "LEFT"}
                   :last-row-attrs {"ALIGN" "LEFT" "BORDER" "1" "SIDES" "B"}
                   :last-section-attrs {"BORDER" "0"}

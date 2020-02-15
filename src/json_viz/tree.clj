@@ -4,7 +4,8 @@
             [json-viz.formatting   :as fmt]
             [json-viz.rhizome      :as rhi]
             [clojure.string        :as str]
-            [json-viz.util         :as util])
+            [json-viz.util         :as util]
+            [hiccup.core           :as hiccup])
   (:refer-clojure :exclude [contains?]))
 
 
@@ -48,6 +49,26 @@
   (util/contains? highlight-paths path))
 
 
+(defn gv-wrap [html] (str "<" html ">"))
+
+
+;; html attrs
+(def table-attr {"BORDER" "0" "ALIGN" "LEFT"})
+(def td-attr {"ALIGN" "LEFT"})
+
+
+(defn label [lbl-txt path highlights]
+  (let [nums (get highlights path)
+        circles (when nums (util/nums->circled nums))]
+    (gv-wrap
+     (hiccup/html
+      [:TABLE table-attr
+       [:TR
+        [:TD td-attr lbl-txt]
+        [:TD td-attr (if nums circles "&nbsp;")]]]))))
+
+
+
 (defn js->dot
   "Returns dot representation of the json."
   [js options]
@@ -57,7 +78,7 @@
                                :highlight-options {:fillcolor "#f2c9c9"}
                                :style "tree"}
                               options)
-        highlight-map  (util/make-highlight-map (:highlight-paths opts))
+        highlights     (util/make-highlight-map (:highlight-paths opts))
         js1            (util/with-path js [])]
 
     
@@ -69,22 +90,22 @@
        (fn [n] (not (empty? (cc/structural n))))
        children
        js1
+
        :node->descriptor
        (fn [n]
          ;; tree style diagram
          (if (empty? (cc/node n))
            ;; This is a structural node - type 'node1'
            (merge graphviz-node-options
-                  {:label (fmt/seq->string (keys (dissoc n :path)))}
+                  {:label (label (fmt/seq->string (keys (dissoc n :path)))
+                                 (:path n)
+                                 highlights)}
                   (:node1-options opts))
            ;; type 'node2'
            (merge graphviz-node-options
-                  {:label (fmt/map->string (cc/node n))}
+                  {:label (label (fmt/map->string (cc/node n))
+                                 (:path n)
+                                 highlights)}
                   (:node2-options opts))))
-
-       :edge->descriptor
-       (fn [_ n]
-         {:headlabel (let [nums (get highlight-map (:path n))]
-                       (when nums (str "<" (util/nums->circled nums 10) ">")))})
-
+       
        :options {:dpi 72}))))

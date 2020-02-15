@@ -4,6 +4,11 @@
 
 
 ;; formatting for mult-line strings
+(def linebreak "<BR />")
+
+
+(defn bold [t] (str "<B>" t "</B>"))
+
 
 (defn- split-string
   "Splits a string with a newline every n charcters. Only splits on space."
@@ -30,7 +35,7 @@
                       (+ cur-count (count word))
                       (first rest-words)
                       (rest rest-words)))))]
-    (apply str (interpose "\n" splits))))
+    (apply str (interpose linebreak splits))))
 
 
 (defn- has-words?
@@ -52,8 +57,8 @@
       (reduce
        (fn [acc [k v]]
          (if (has-words? v)
-           (str acc k "\n" (split-string v max-string-length) "\n")
-           (str acc k " " v "\n")))
+           (str acc  (bold k)  linebreak (split-string v max-string-length) linebreak)
+           (str acc (bold k) "&nbsp;&nbsp;&nbsp;" v linebreak)))
        ""
        m)))
 
@@ -63,6 +68,6 @@
   [s]
   (reduce
    (fn [acc cur]
-     (str acc cur))
+     (bold (str acc cur)))
    ""
    s))

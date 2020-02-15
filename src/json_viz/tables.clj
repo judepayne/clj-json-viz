@@ -27,7 +27,6 @@
 (defn- row
   [item td-attrs
    & {:keys [conv-key?] :or {conv-key? true}}]
-  (println item)
   (let [{[k v] :item nums :highlights hl-row-attrs :hl-row-attrs} item
         at (attr (merge td-attrs hl-row-attrs))]
     (when (not (and (nil? k) (nil? v)))
@@ -89,7 +88,7 @@
       {:item item})))
 
 
-(defn uml-class
+(defn table
   "Produces a graphviz html-like node label, given:
   - the header-item, a 2-tuple of the key and value making up the header row.
   - row-items, a sequence of 2-tuples each of the key and value making up (each) row.
@@ -97,19 +96,22 @@
   - (optional) highlight-rows-bgcolor, a hex color value used as background color highlighting.
   - (optional) td-attrs & table-attrs, an map of (html/ graphviz) attributes and their
     values to be added into the table tag & TD tags of every one of the row-items."
-  [header-item props objs path
-   & {:keys [highlight-items
+  [header-item props objs
+   & {:keys [path
+             highlight-items
              highlight-items-attr
              td-attrs
              last-row-attrs
              last-section-attrs
              table-attrs]
-      :or {highlight-items {}
+      :or {path []
+           highlight-items {}
            highlight-items-attr {"BGCOLOR" "#e0a19b"}
            td-attrs nil
            last-row-attrs nil
            last-section-attrs nil
            table-attrs nil}}]
+  (println props)
   ;; We 'decorate' items with any meta data so they can pass through intermediate functions to 'row'
   (let [dec-fn (fn [item item-path]
                  (decorate-item item item-path highlight-items highlight-items-attr nil))
@@ -118,6 +120,7 @@
                      (dec-fn [k v] (conj path k)))
                    props)
         objs (map (fn [item] {:item item}) objs)]
+    (println props)
     (str
      "<<TABLE " (attr table-attrs) ">"
      (header-row hdr)
