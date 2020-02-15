@@ -67,3 +67,14 @@
                        (map
                         #(circled-number (first %) (second %))
                         m))))))
+
+
+(defn primitive?
+  "Is the item a primitive type, i.e. not map, sequence or map-entry."
+  [item]
+  (not (or (map-entry? item) (sequential? item) (map? item))))
+
+
+(defn primitives?
+  [coll]
+  (every? primitive? coll))
