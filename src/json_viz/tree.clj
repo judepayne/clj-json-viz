@@ -1,7 +1,6 @@
 (ns json-viz.tree
   (:require [clojure.data.json     :as json]
             [contract-checker.core :as cc]
-            [json-viz.formatting   :as fmt]
             [json-viz.rhizome      :as rhi]
             [clojure.string        :as str]
             [json-viz.util         :as util]
@@ -49,18 +48,15 @@
   (util/contains? highlight-paths path))
 
 
-(defn gv-wrap [html] (str "<" html ">"))
-
-
 ;; html attrs
-(def table-attr {"BORDER" "0" "ALIGN" "LEFT"})
+(def table-attr {"BORDER" 0 "ALIGN" "LEFT"})
 (def td-attr {"ALIGN" "LEFT"})
 
 
 (defn label [lbl-txt path highlights]
   (let [nums (get highlights path)
         circles (when nums (util/nums->circled nums))]
-    (gv-wrap
+    (util/gv-wrap
      (hiccup/html
       [:TABLE table-attr
        [:TR
@@ -97,13 +93,13 @@
          (if (empty? (cc/node n))
            ;; This is a structural node - type 'node1'
            (merge graphviz-node-options
-                  {:label (label (fmt/seq->string (keys (dissoc n :path)))
+                  {:label (label (util/seq->string (keys (dissoc n :path)))
                                  (:path n)
                                  highlights)}
                   (:node1-options opts))
            ;; type 'node2'
            (merge graphviz-node-options
-                  {:label (label (fmt/map->string (cc/node n))
+                  {:label (label (util/map->string (cc/node n))
                                  (:path n)
                                  highlights)}
                   (:node2-options opts))))

@@ -3,7 +3,8 @@
             [json-viz.rhizome     :as rhi]
             [clojure.string       :as str]
             [json-viz.util        :as util]
-            [json-viz.tables      :as tables]))
+            [json-viz.tables      :as tables]
+            [hiccup.core          :as hiccup]))
 
 ;; -------------- Navigation --------------
 ;; A. NODES
@@ -151,13 +152,6 @@
   (util/contains? highlight-paths path))
 
 
-(def ^:private table-attrs
-  {"BORDER" 1
-   "CELLBORDER" 0
-   "CELLSPACING" 0
-   "CELLPADDING" 4})
-
-
 (defn- path
   "Returns the path"
   [nd]
@@ -177,6 +171,47 @@
 (def ^:private dont-display [:path :type :title])
 
 
+;; html attrs
+(def table-attr {"BORDER" 1 "CELLBORDER" 0 "CELLSPACING" 0 "CELLPADDING" 4 "BORDER-COLOR" "#00FF00"})
+(def hdr-attr {"ALIGN" "CENTER"})
+(def td-attr {"ALIGN" "LEFT"})
+(def last-attr {"BORDER" 1 "SIDES" "B"})
+(def hl-attr {"BGCOLOR" "#F5E2B8"})
+
+
+(defn spc ([] (spc 1)) ([n] (apply str (repeat n "&nbsp;"))))
+
+
+(defn row [item path highlights
+           & {:keys [attr hl-attr] :or {attr {} hl-attr hl-attr}}]
+  (let [nums (get highlights path)
+        circles (when nums (util/nums->circled nums))]
+    [:TR
+     [:TD (merge td-attr attr (when nums hl-attr))
+      (apply str (interpose (str (spc) ":" (spc 2)) item))]
+     [:TD (merge td-attr attr (when nums hl-attr))
+      (if nums circles "&nbsp;")]]))
+
+
+(defn rows [items path highlights
+            & {:keys [hl-attr] :or {hl-attr hl-attr}}]
+  (hiccup/html
+   (for [x (butlast items)]
+     (row x (conj path (first x)) highlights :hl-attr hl-attr))
+   (row (last items) (conj path (first (last items))) highlights
+        :attr last-attr :hl-attr hl-attr)))
+
+
+(defn table [sections path highlights
+             & {:keys [tbl-attr hl-attr] :or {tbl-attr nil hl-attr hl-attr}}]
+  (util/gv-wrap
+   (hiccup/html
+    [:TABLE (merge table-attr tbl-attr)
+     (row (first sections) path highlights :attr (merge hdr-attr last-attr) :hl-attr hl-attr)
+     (for [x (rest sections)]
+       (rows x path highlights :hl-attr hl-attr))])))
+
+
 (defn js->dot
   "Returns dot representation of the json."
   [js options]
@@ -185,13 +220,14 @@
                                :highlight-paths []
                                :highlight-options {:fillcolor "#f5e2b8"}}
                               options)
-        highlight-map  (util/make-highlight-map (:highlight-paths opts))
+        highlights     (util/make-highlight-map (:highlight-paths opts))
         js1            (util/with-path js [])]
 
     (rhi/tree->dot
      branch?
      children
      js1
+
      :node->descriptor
      (fn [n]
        (let [hdr [(entity-type n) (entity-title n)]
@@ -200,20 +236,10 @@
                  (filter-entries dont-display (entries n)))
              cn []]
          (merge graphviz-node-options
-                {:label
-                 (tables/table
-                  hdr
-                  ps
-                  cn
-                  :path (path n)
-                  :td-attrs {"ALIGN" "LEFT"}
-                  :last-row-attrs {"ALIGN" "LEFT" "BORDER" "1" "SIDES" "B"}
-                  :last-section-attrs {"BORDER" "0"}
-                  :table-attrs (merge table-attrs
-                                      {"BGCOLOR" (-> opts :node2-options :fillcolor)})
-                  :highlight-items highlight-map
-                  :highlight-items-attr {"BGCOLOR"
-                                         (-> opts :highlight-options :fillcolor)})})))
+                {:label (table [hdr ps] (path n) highlights
+                         :tbl-attr {"BGCOLOR" (-> opts :node2-options :fillcolor)}
+                         :hl-attr  {"BGCOLOR" (-> opts :highlight-options :fillcolor)})
+                 })))
 
      :edge->descriptor (fn [_ _] {:dir "back"})
 
