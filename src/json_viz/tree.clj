@@ -71,7 +71,7 @@
   (let [opts           (merge {:node1-options {:fillcolor "#dbdad6"}
                                :node2-options {:fillcolor "#c6e1f3"}
                                :highlight-nodes []
-                               :highlight-options {:fillcolor "#f2c9c9"}
+                               :highlight-options {:fillcolor "#e9c9c9"}
                                :style "tree"}
                               options)
         highlights     (util/make-highlight-map (:highlight-paths opts))
@@ -96,12 +96,14 @@
                   {:label (label (util/seq->string (keys (dissoc n :path)))
                                  (:path n)
                                  highlights)}
-                  (:node1-options opts))
+                  (:node1-options opts)
+                  (when (get highlights (:path n)) (:highlight-options opts)))
            ;; type 'node2'
            (merge graphviz-node-options
                   {:label (label (util/map->string (cc/node n))
                                  (:path n)
                                  highlights)}
-                  (:node2-options opts))))
+                  (:node2-options opts)
+                  (when (get highlights (:path n)) (:highlight-options opts)))))
        
        :options {:dpi 72}))))

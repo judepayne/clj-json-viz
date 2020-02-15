@@ -3,7 +3,6 @@
             [json-viz.rhizome     :as rhi]
             [clojure.string       :as str]
             [json-viz.util        :as util]
-            [json-viz.tables      :as tables]
             [hiccup.core          :as hiccup]))
 
 ;; -------------- Navigation --------------
