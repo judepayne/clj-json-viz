@@ -89,7 +89,7 @@
 (defn bold [t] (str "<B>" t "</B>"))
 
 
-(defn- split-string
+(defn split-string
   "Splits a string with a newline every n charcters. Only splits on space."
   [s n]
   (let [words (str/split s #" ")

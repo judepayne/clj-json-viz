@@ -171,9 +171,10 @@
 
 
 ;; html attrs
-(def table-attr {"BORDER" 1 "CELLBORDER" 0 "CELLSPACING" 0 "CELLPADDING" 4 "BORDER-COLOR" "#00FF00"})
-(def hdr-attr {"ALIGN" "CENTER"})
-(def td-attr {"ALIGN" "LEFT"})
+(def table-attr {"ALIGN" "RIGHT" "BORDER" 1 "CELLBORDER" 0 "CELLSPACING" 0
+                 "CELLPADDING" 4 "BORDER-COLOR" "#00FF00" "VALIGN" "TOP"})
+(def hdr-attr {"ALIGN" "LEFT"})
+(def td-attr {"ALIGN" "LEFT" "VALIGN" "TOP"})
 (def last-attr {"BORDER" 1 "SIDES" "B"})
 (def hl-attr {"BGCOLOR" "#F5E2B8"})
 
@@ -182,12 +183,13 @@
 
 
 (defn row [item path highlights
-           & {:keys [attr hl-attr] :or {attr {} hl-attr hl-attr}}]
+           & {:keys [attr hl-attr bold?] :or {attr {} hl-attr hl-attr bold? false}}]
   (let [nums (get highlights path)
         circles (when nums (util/nums->circled nums))]
     [:TR
-     [:TD (merge td-attr attr (when nums hl-attr))
-      (apply str (interpose (str (spc) ":" (spc 2)) item))]
+     (let [items (map #(util/split-string % 30) item)]
+       (for [x items]
+         [:TD (merge td-attr attr (when nums hl-attr)) (if bold? (util/bold x) x)]))
      [:TD (merge td-attr attr (when nums hl-attr))
       (if nums circles "&nbsp;")]]))
 
@@ -206,7 +208,7 @@
   (util/gv-wrap
    (hiccup/html
     [:TABLE (merge table-attr tbl-attr)
-     (row (first sections) path highlights :attr (merge hdr-attr last-attr) :hl-attr hl-attr)
+     (row (first sections) path highlights :attr (merge hdr-attr last-attr) :hl-attr hl-attr :bold? true)
      (for [x (rest sections)]
        (rows x path highlights :hl-attr hl-attr))])))
 
@@ -229,7 +231,7 @@
 
      :node->descriptor
      (fn [n]
-       (let [hdr [(entity-type n) (entity-title n)]
+       (let [hdr [(entity-title n) (entity-type n)]
              ps (mapv
                  (fn [item] [(entity-title item) (entity-type item)])
                  (filter-entries dont-display (entries n)))
