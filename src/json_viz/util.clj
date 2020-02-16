@@ -37,11 +37,19 @@
   (apply str (interpose ", " s)))
 
 
-(defn make-highlight-map
+(defn highlight-map
+  "Rearranges highlight-map in a convenient form to lookup by path."
   [errors]
   (let [m  (group-by #(:path (val %)) (zipmap (range 1 1000) errors))
         m' (into {} (map (fn [[k v]] [k (into {} v)]) m))]
     m'))
+
+
+(defn highlight-numbers
+  "Returns highlight numbers for the path."
+  [path dont-display highlights]
+  (let [paths (conj (map #(conj path %) (map name dont-display)) path)]
+    (apply merge (map #(get highlights %) paths))))
 
 
 (defn circled-number
@@ -69,6 +77,14 @@
                        (map
                         #(circled-number (first %) (second %))
                         m))))))
+
+
+(defn decorate-item
+  [item attr hl-attr dont-display path highlights]
+  (let [nums (highlight-numbers path dont-display highlights)
+        attr (if nums (merge attr hl-attr) attr)]
+    {:tds (conj item (if nums (nums->circled nums) ""))
+     :attr attr}))
 
 
 (defn primitive?

@@ -3,7 +3,8 @@
             [json-viz.rhizome     :as rhi]
             [clojure.string       :as str]
             [json-viz.util        :as util]
-            [hiccup.core          :as hiccup]))
+            [hiccup.core          :as hiccup]
+            [json-viz.table       :as tbl]))
 
 ;; -------------- Navigation --------------
 ;; A. NODES
@@ -173,57 +174,20 @@
 ;; html attrs
 (def table-attr {"ALIGN" "RIGHT" "BORDER" 1 "CELLBORDER" 0 "CELLSPACING" 0
                  "CELLPADDING" 4 "BORDER-COLOR" "#00FF00" "VALIGN" "TOP"})
-(def hdr-attr {"ALIGN" "LEFT"})
+(def hdr-attr {"ALIGN" "LEFT" "BORDER" 1 "SIDES" "B"})
 (def td-attr {"ALIGN" "LEFT" "VALIGN" "TOP"})
-(def last-attr {"BORDER" 1 "SIDES" "B"})
 (def hl-attr {"BGCOLOR" "#F5E2B8"})
 
 
-(defn spc ([] (spc 1)) ([n] (apply str (repeat n "&nbsp;"))))
-
-
-(defn row [item path highlights
-           & {:keys [attr hl-attr bold?] :or {attr {} hl-attr hl-attr bold? false}}]
-  (let [paths (conj (map #(conj path %) (map name dont-display)) path)
-        nums (apply merge (map #(get highlights %) paths))
-        circles (when nums (util/nums->circled nums))]
-    [:TR
-     (let [items (map #(util/split-string % 30) item)]
-       (for [x items]
-         [:TD (merge td-attr attr (when nums hl-attr))
-          (if bold? (util/bold (str x (spc 2))) (str x (spc 2)))]))
-     [:TD (merge td-attr attr (when nums hl-attr))
-      (if nums circles "&nbsp;")]]))
-
-
-(defn rows [items path highlights
-            & {:keys [hl-attr] :or {hl-attr hl-attr}}]
-  (hiccup/html
-   (for [x (butlast items)]
-     (row x (conj path (first x)) highlights :hl-attr hl-attr))
-   (row (last items) (conj path (first (last items))) highlights
-        :attr last-attr :hl-attr hl-attr)))
-
-
-(defn table [sections path highlights
-             & {:keys [tbl-attr hl-attr] :or {tbl-attr nil hl-attr hl-attr}}]
-  (util/gv-wrap
-   (hiccup/html
-    [:TABLE (merge table-attr tbl-attr)
-     (row (first sections) path highlights :attr (merge hdr-attr last-attr) :hl-attr hl-attr :bold? true)
-     (for [x (rest sections)]
-       (rows x path highlights :hl-attr hl-attr))])))
-
-
 (defn js->dot
-  "Returns dot representation of the json."
+  "Returns dot representation of the json, given a map of graphviz options."
   [js options]
   (let [opts           (merge {:node1-options {:fillcolor "#dbdad6"}
                                :node2-options {:fillcolor "#c6e1f3"}
                                :highlight-paths []
                                :highlight-options {:fillcolor "#f5e2b8"}}
                               options)
-        highlights     (util/make-highlight-map (:highlight-paths opts))
+        highlights     (util/highlight-map (:highlight-paths opts))
         js1            (util/with-path js [])]
 
     (rhi/tree->dot
@@ -233,16 +197,23 @@
 
      :node->descriptor
      (fn [n]
-       (let [hdr [(entity-title n) (entity-type n)]
+       (let [hdr [(util/bold (entity-title n)) (util/bold (entity-type n))]
+             hdr (util/decorate-item hdr hdr-attr hl-attr dont-display (path n) highlights)
              ps (mapv
-                 (fn [item] [(entity-title item) (entity-type item)])
-                 (filter-entries dont-display (entries n)))
-             cn []]
+                 (fn [item]
+                   (util/decorate-item
+                    [(entity-title item) (entity-type item)]
+                    td-attr hl-attr
+                    dont-display
+                    (conj (path n) (entity-title item))
+                    highlights))
+                 (filter-entries dont-display (entries n)))]
+
          (merge graphviz-node-options
-                {:label (table [hdr ps] (path n) highlights
-                         :tbl-attr {"BGCOLOR" (-> opts :node2-options :fillcolor)}
-                         :hl-attr  {"BGCOLOR" (-> opts :highlight-options :fillcolor)})
-                 })))
+                {:label (tbl/table [hdr ps] 
+                                   :table-attr (merge
+                                                table-attr
+                                                {"BGCOLOR" (-> opts :node2-options :fillcolor)}))})))
 
      :edge->descriptor (fn [_ _] {:dir "back"})
 

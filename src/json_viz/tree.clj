@@ -74,7 +74,7 @@
                                :highlight-options {:fillcolor "#e9c9c9"}
                                :style "tree"}
                               options)
-        highlights     (util/make-highlight-map (:highlight-paths opts))
+        highlights     (util/highlight-map (:highlight-paths opts))
         js1            (util/with-path js [])]
 
     
