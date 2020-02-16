@@ -184,12 +184,14 @@
 
 (defn row [item path highlights
            & {:keys [attr hl-attr bold?] :or {attr {} hl-attr hl-attr bold? false}}]
-  (let [nums (get highlights path)
+  (let [paths (conj (map #(conj path %) (map name dont-display)) path)
+        nums (apply merge (map #(get highlights %) paths))
         circles (when nums (util/nums->circled nums))]
     [:TR
      (let [items (map #(util/split-string % 30) item)]
        (for [x items]
-         [:TD (merge td-attr attr (when nums hl-attr)) (if bold? (util/bold x) x)]))
+         [:TD (merge td-attr attr (when nums hl-attr))
+          (if bold? (util/bold (str x (spc 2))) (str x (spc 2)))]))
      [:TD (merge td-attr attr (when nums hl-attr))
       (if nums circles "&nbsp;")]]))
 
