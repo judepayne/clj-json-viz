@@ -173,7 +173,7 @@
 
 ;; html attrs
 (def table-attr {"ALIGN" "RIGHT" "BORDER" 1 "CELLBORDER" 0 "CELLSPACING" 0
-                 "CELLPADDING" 4 "BORDER-COLOR" "#00FF00" "VALIGN" "TOP"})
+                 "CELLPADDING" 7 "BORDER-COLOR" "#00FF00" "VALIGN" "TOP"})
 (def hdr-attr {"ALIGN" "LEFT" "BORDER" 1 "SIDES" "B"})
 (def td-attr {"ALIGN" "LEFT" "VALIGN" "TOP"})
 (def hl-attr {"BGCOLOR" "#F5E2B8"})

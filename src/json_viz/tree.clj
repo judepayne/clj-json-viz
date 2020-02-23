@@ -64,7 +64,6 @@
         [:TD td-attr (if nums circles "&nbsp;")]]]))))
 
 
-
 (defn js->dot
   "Returns dot representation of the json."
   [js options]
